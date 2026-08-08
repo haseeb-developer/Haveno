@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import { createClient } from "@/lib/supabase/server";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -52,6 +53,7 @@ export default async function RootLayout({
           <AuthProvider initialUser={user}>
             {children}
             <Toaster />
+            <Analytics />
           </AuthProvider>
         </ThemeProvider>
       </body>
