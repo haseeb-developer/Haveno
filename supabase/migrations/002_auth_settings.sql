@@ -1,0 +1,34 @@
+-- =============================================================================
+-- Haveno — 002_auth_settings.sql
+-- =============================================================================
+-- Supabase Auth's core settings (email confirmations, redirect URLs, token
+-- expiry, rate limits) are NOT controlled via SQL — they live in the
+-- Dashboard and in `supabase/config.toml` when using the Supabase CLI.
+-- This file exists purely to point you to the right place, since it's easy
+-- to assume everything auth-related belongs in a migration.
+--
+-- Nothing in this file needs to be run — it contains no SQL statements.
+-- =============================================================================
+
+-- 1. Email confirmations
+--    Dashboard → Authentication → Sign In / Providers → Email
+--    Toggle "Confirm email" ON so users must verify before signing in.
+--
+-- 2. Redirect URLs (required for password reset & email confirmation links)
+--    Dashboard → Authentication → URL Configuration
+--    Site URL:        http://localhost:3000   (or your production domain)
+--    Redirect URLs:    http://localhost:3000/auth/callback
+--                       http://localhost:3000/auth/confirm
+--                       https://your-production-domain.com/auth/callback
+--                       https://your-production-domain.com/auth/confirm
+--
+-- 3. Email templates (optional but recommended)
+--    Dashboard → Authentication → Email Templates
+--    Confirm signup / Reset password templates already point to
+--    {{ .ConfirmationURL }}, which Supabase generates using the redirect
+--    URLs above — no changes required unless you want custom copy.
+--
+-- 4. Rate limiting & password strength (optional hardening)
+--    Dashboard → Authentication → Policies
+--    Consider enabling the minimum password strength requirement and
+--    reviewing the default rate limits before going to production.

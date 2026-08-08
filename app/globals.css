@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 100 8% 96%;
+    --foreground: 160 20% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 20% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 20% 8%;
+    --primary: 42 45% 52%;
+    --primary-foreground: 160 25% 9%;
+    --secondary: 199 22% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 100 8% 91%;
+    --muted-foreground: 150 6% 42%;
+    --accent: 42 40% 91%;
+    --accent-foreground: 160 20% 10%;
+    --destructive: 5 55% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 100 10% 87%;
+    --input: 100 10% 87%;
+    --ring: 42 45% 52%;
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 160 14% 5%;
+    --foreground: 90 8% 93%;
+    --card: 160 11% 8%;
+    --card-foreground: 90 8% 93%;
+    --popover: 160 11% 8%;
+    --popover-foreground: 90 8% 93%;
+    --primary: 42 48% 62%;
+    --primary-foreground: 160 25% 8%;
+    --secondary: 199 20% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 160 8% 14%;
+    --muted-foreground: 150 6% 63%;
+    --accent: 160 8% 16%;
+    --accent-foreground: 90 8% 93%;
+    --destructive: 5 50% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 12% 16%;
+    --input: 160 12% 16%;
+    --ring: 42 48% 62%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    background-color: rgba(201, 169, 97, 0.28);
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bg-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
