@@ -3,7 +3,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { AUTH_COPY } from "@/constants/copy";
 
-export const metadata: Metadata = { title: "Set new password — Haveno" };
+export const metadata: Metadata = { title: "Set new password — Havenoo" };
 
 export default function ResetPasswordPage() {
   const copy = AUTH_COPY.resetPassword;

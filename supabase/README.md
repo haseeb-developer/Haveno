@@ -1,6 +1,6 @@
 # Supabase configuration
 
-This folder contains the SQL and configuration Haveno's authentication
+This folder contains the SQL and configuration Havenoo's authentication
 foundation relies on.
 
 ## Files

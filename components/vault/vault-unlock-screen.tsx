@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/auth/form-field";
 import { PasswordInput } from "@/components/auth/password-input";
 import { VaultDial } from "@/components/auth/vault-dial";
+import { ResetVaultDialog } from "@/components/vault/reset-vault-dialog";
 
 export function VaultUnlockScreen() {
   const { unlockVault } = useVault();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [dialState, setDialState] = useState<"idle" | "unlocking" | "unlocked">(
     "idle"
   );
@@ -98,7 +100,17 @@ export function VaultUnlockScreen() {
             {isSubmitting ? "Unlocking…" : "Unlock vault"}
           </Button>
         </form>
+
+        <button
+          type="button"
+          onClick={() => setResetDialogOpen(true)}
+          className="mt-6 w-full text-center text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          Forgot your Vault Passphrase?
+        </button>
       </motion.div>
+
+      <ResetVaultDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen} />
     </div>
   );
 }

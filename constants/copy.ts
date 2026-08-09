@@ -1,5 +1,5 @@
 export const BRAND = {
-  name: "Haveno",
+  name: "Havenoo",
   tagline: "One key. Everything protected.",
 } as const;
 

@@ -1,14 +1,14 @@
-# Haveno
+# Havenoo
 
 A zero-knowledge password manager. Every saved credential is encrypted on
 your device before it ever reaches the server — Supabase, its dashboard,
-and Haveno's own developers only ever see ciphertext.
+and Havenoo's own developers only ever see ciphertext.
 
 ---
 
 ## 1. Project overview
 
-Haveno ships in two layers:
+Havenoo ships in two layers:
 
 - **Authentication** — email/password sign up, login, password recovery,
   email verification, and session management, built on Supabase Auth.
@@ -19,7 +19,7 @@ Haveno ships in two layers:
   to Supabase. There is no server-side decryption path, by design.
 
 If you lose your Vault Passphrase, your vault cannot be recovered by
-anyone, including Haveno. This is a deliberate trade-off of true
+anyone, including Havenoo. This is a deliberate trade-off of true
 zero-knowledge encryption, and the app warns you about it clearly before
 you set your passphrase.
 
@@ -44,7 +44,7 @@ you set your passphrase.
 ## 3. Folder structure
 
 ```
-Haveno/
+Havenoo/
 ├── app/
 │   ├── (auth)/                # Public auth pages: login, sign-up, password reset, etc.
 │   ├── auth/                   # callback + confirm route handlers
@@ -210,7 +210,7 @@ Check **Authentication → URL Configuration → Redirect URLs** includes both
 **"Incorrect Vault Passphrase" even though you're sure it's right.**
 Vault Passphrases are case-sensitive and have no recovery path by design —
 double-check for typos, caps lock, or leading/trailing spaces. There is no
-way for Haveno to verify or reset this for you.
+way for Havenoo to verify or reset this for you.
 
 **Vault items don't decrypt / show as garbled data.**
 This should never happen under normal operation — GCM's authentication tag
@@ -237,12 +237,12 @@ briefly, which breaks the zero-knowledge guarantee. A separate passphrase
 that's never transmitted anywhere avoids that entirely.
 
 **What if I forget my Vault Passphrase?**
-There's no recovery. A "reset" option would necessarily require Haveno to
+There's no recovery. A "reset" option would necessarily require Havenoo to
 either store your key or a way to derive it — both defeat the purpose of
 zero-knowledge encryption. This is stated clearly during setup for exactly
 this reason.
 
-**Can Haveno's developers see my saved passwords?**
+**Can Havenoo's developers see my saved passwords?**
 No — not through the database, the Supabase dashboard, backups, or direct
 SQL access. Every one of those surfaces only ever contains ciphertext.
 
@@ -251,3 +251,44 @@ No — it's the same tier of cost parameters Bitwarden uses by default. The
 realistic attack this defends against is an attacker with a stolen copy of
 the database attempting to brute-force Vault Passphrases offline; Argon2id's
 memory-hardness makes that expensive at scale, unlike faster hash-based KDFs.
+
+---
+
+## 17. What changed in this update
+
+- **Renamed to Havenoo** everywhere in the UI, metadata, and copy. One
+  internal constant was deliberately left unchanged — see the comment on
+  `VAULT_VERIFIER_PLAINTEXT` in `lib/crypto/constants.ts` — because it's
+  baked into every already-encrypted vault's verifier, not a display string.
+- **Auth delay fixed.** The root cause was three separate
+  `supabase.auth.getUser()` network round-trips per navigation (middleware,
+  root layout, dashboard layout), compounded by `router.refresh()` firing
+  on every single page mount instead of only on real sign-in/sign-out
+  events. `getUser()` now runs once, in middleware, and is forwarded to
+  Server Components via a trusted request header — see
+  `lib/supabase/current-user.ts`.
+- **Reset-password email:** the code was already correct — Supabase's
+  default built-in email provider is capped at 2 emails/hour project-wide
+  and silently drops anything past that limit (by design, to prevent
+  email enumeration). Set up custom SMTP under **Authentication → SMTP
+  Settings** in the Supabase dashboard for reliable delivery.
+- **Vault cards redesigned** with refined spacing, hover states, and
+  keyboard-accessible controls (see `components/ui/icon-button.tsx`).
+- **Password hints are now clickable**, opening an accessible dialog
+  (Escape to close, click outside, focus trap) — see
+  `components/vault/hint-dialog.tsx`. It only ever displays the hint,
+  never the password.
+- **Terms & Security page** at `/terms-security`, gating first vault use
+  via a new nullable `terms_acknowledged_at` column on `profiles` (see
+  `supabase/migrations/005_terms_acknowledgment.sql`).
+- **"Forgot your Vault Passphrase?"** now exists on the unlock screen.
+  Since zero-knowledge encryption makes real recovery impossible, this
+  requires explicit typed confirmation and permanently deletes the
+  existing encrypted vault, replacing it with a fresh empty one under a
+  new passphrase. See `components/vault/reset-vault-dialog.tsx`.
+- **Passphrase generation** added to vault setup only (never on unlock),
+  entirely local via `crypto.getRandomValues()` — see
+  `lib/crypto/passphrase-generator.ts`.
+
+**New migration to run:** `supabase/migrations/005_terms_acknowledgment.sql`
+— additive only, safe to run on a project with existing data.

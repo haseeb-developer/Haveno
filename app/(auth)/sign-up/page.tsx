@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 import { AUTH_COPY } from "@/constants/copy";
 import { ROUTES } from "@/constants/routes";
 
-export const metadata: Metadata = { title: "Create account — Haveno" };
+export const metadata: Metadata = { title: "Create account — Havenoo" };
 
 export default function SignUpPage() {
   const copy = AUTH_COPY.signUp;

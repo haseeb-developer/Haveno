@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import { AUTH_COPY } from "@/constants/copy";
 import { ROUTES } from "@/constants/routes";
 
-export const metadata: Metadata = { title: "Sign in — Haveno" };
+export const metadata: Metadata = { title: "Sign in — Havenoo" };
 
 export default function LoginPage() {
   const copy = AUTH_COPY.login;
@@ -18,7 +18,7 @@ export default function LoginPage() {
       subtitle={copy.subtitle}
       footer={
         <p className="text-center text-sm text-muted-foreground">
-          New to Haveno?{" "}
+          New to Havenoo?{" "}
           <Link
             href={ROUTES.signUp}
             className="font-medium text-vault-gold transition-colors hover:text-vault-gold-bright"

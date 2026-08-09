@@ -1,5 +1,5 @@
 /**
- * All cryptographic parameters for Haveno's zero-knowledge vault live
+ * All cryptographic parameters for Havenoo's zero-knowledge vault live
  * here, in one place, so they're easy to audit and to bump in the future
  * without hunting through the codebase.
  */
@@ -37,6 +37,17 @@ export const KDF_SALT_BYTES = 16;
  * `verifier`. On unlock, if this decrypts back to this exact string, the
  * entered passphrase was correct — checked entirely client-side, without
  * the server ever seeing or validating the passphrase itself.
+ *
+ * DO NOT change this string as part of a rebrand or any other cosmetic
+ * update, even though it happens to contain the product name. Every vault
+ * that already exists has this exact string encrypted inside its stored
+ * verifier. Changing it means every existing vault's correct passphrase
+ * would suddenly fail the verifier check and look "incorrect" — this is
+ * a value tied to already-encrypted data, not a display string. If the
+ * scheme ever needs a genuine break like this, do it via a new
+ * CURRENT_ENCRYPTION_VERSION and keep the old string reachable for
+ * decrypting existing verifiers, the same way encryption_version is
+ * meant to be used for vault items.
  */
 export const VAULT_VERIFIER_PLAINTEXT = "Haveno-verifier-v1";
 

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
-import { ShieldAlert, KeyRound } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShieldAlert, KeyRound, Wand2, RefreshCw, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useVault } from "@/components/providers/vault-provider";
+import { generatePassphrase } from "@/lib/crypto";
 import {
   vaultPassphraseSetupSchema,
   type VaultPassphraseSetupValues,
@@ -22,6 +23,8 @@ import { VaultDial } from "@/components/auth/vault-dial";
 export function VaultSetupScreen() {
   const { setupVault } = useVault();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [generatedPassphrase, setGeneratedPassphrase] = useState<string | null>(null);
+  const [justCopied, setJustCopied] = useState(false);
   const [dialState, setDialState] = useState<"idle" | "unlocking" | "unlocked">(
     "idle"
   );
@@ -30,6 +33,7 @@ export function VaultSetupScreen() {
     register,
     handleSubmit,
     watch,
+    setValue,
     control,
     formState: { errors, isSubmitting },
   } = useForm<VaultPassphraseSetupValues>({
@@ -42,6 +46,27 @@ export function VaultSetupScreen() {
   });
 
   const passphrase = watch("passphrase");
+  const passphraseField = register("passphrase");
+
+  const handleGenerate = () => {
+    const generated = generatePassphrase();
+    setGeneratedPassphrase(generated);
+    setJustCopied(false);
+    setValue("passphrase", generated, { shouldValidate: true });
+    setValue("confirmPassphrase", generated, { shouldValidate: true });
+  };
+
+  const handleCopyGenerated = async () => {
+    if (!generatedPassphrase) return;
+    try {
+      await navigator.clipboard.writeText(generatedPassphrase);
+      setJustCopied(true);
+      toast.success("Passphrase copied");
+      setTimeout(() => setJustCopied(false), 2000);
+    } catch {
+      toast.error("Couldn't copy to clipboard");
+    }
+  };
 
   const onSubmit = async (values: VaultPassphraseSetupValues) => {
     setServerError(null);
@@ -84,7 +109,7 @@ export function VaultSetupScreen() {
           </h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
             This is separate from your account password. It&apos;s the only key
-            that can unlock your saved passwords — Haveno never sees it and
+            that can unlock your saved passwords — Havenoo never sees it and
             can&apos;t recover it for you.
           </p>
         </div>
@@ -93,12 +118,59 @@ export function VaultSetupScreen() {
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-vault-gold" />
           <p className="text-xs leading-relaxed text-foreground">
             <span className="font-medium">
-              Haveno cannot recover your Vault Passphrase.
+              Havenoo cannot recover your Vault Passphrase.
             </span>{" "}
             If you lose it, your encrypted vault cannot be decrypted — by
             you, or by anyone else.
           </p>
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mb-4 w-full"
+          onClick={handleGenerate}
+        >
+          <Wand2 className="h-3.5 w-3.5" />
+          {generatedPassphrase ? "Generate another" : "Generate a strong passphrase"}
+        </Button>
+
+        <AnimatePresence>
+          {generatedPassphrase && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-2.5 rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="break-all font-mono text-sm font-medium text-foreground">
+                    {generatedPassphrase}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCopyGenerated}
+                    className="flex shrink-0 items-center gap-1 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Copy generated passphrase"
+                  >
+                    {justCopied ? (
+                      <Check className="h-3.5 w-3.5 text-state-success" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <RefreshCw className="h-3 w-3 shrink-0" />
+                  Save this somewhere safe — Havenoo won&apos;t show it to you again.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
           <FormField
@@ -111,7 +183,11 @@ export function VaultSetupScreen() {
               autoComplete="new-password"
               placeholder="At least 12 characters"
               hasError={!!errors.passphrase}
-              {...register("passphrase")}
+              {...passphraseField}
+              onChange={(e) => {
+                passphraseField.onChange(e);
+                setGeneratedPassphrase(null);
+              }}
             />
             <PassphraseStrengthMeter passphrase={passphrase ?? ""} />
           </FormField>
@@ -147,7 +223,7 @@ export function VaultSetupScreen() {
               htmlFor="acknowledged"
               className="cursor-pointer text-xs font-normal leading-relaxed text-muted-foreground"
             >
-              I understand Haveno cannot recover my Vault Passphrase, and
+              I understand Havenoo cannot recover my Vault Passphrase, and
               that losing it means losing access to my saved passwords.
             </Label>
           </div>

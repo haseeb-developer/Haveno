@@ -18,7 +18,7 @@ const PANEL_POINTS = [
   },
   {
     title: "A calm surface for a serious job",
-    body: "Protecting credentials shouldn't feel like a chore. Haveno keeps the experience quiet, precise, and fast.",
+    body: "Protecting credentials shouldn't feel like a chore. Havenoo keeps the experience quiet, precise, and fast.",
   },
 ];
 

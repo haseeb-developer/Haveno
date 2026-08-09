@@ -100,3 +100,32 @@ export async function deleteVaultItemRow(id: string): Promise<void> {
   const { error } = await supabase.from("vault_items").delete().eq("id", id);
   if (error) throw error;
 }
+
+/**
+ * Permanently discards a user's entire vault: every vault_items row and
+ * the vault_encryption_keys row itself. There is deliberately no way to
+ * recover what's deleted here — that's the whole point. This exists for
+ * the "forgot my Vault Passphrase" flow, where the alternative would be a
+ * recovery mechanism that breaks zero-knowledge encryption entirely.
+ *
+ * RLS on both tables already restricts every DELETE to auth.uid() =
+ * user_id, so this can never touch another user's rows regardless of
+ * what the client sends.
+ */
+export async function resetVaultCompletely(): Promise<void> {
+  const supabase = createClient();
+
+  const { error: itemsError } = await supabase
+    .from("vault_items")
+    .delete()
+    .not("id", "is", null); // delete-all-own-rows guard; RLS scopes this to the caller
+
+  if (itemsError) throw itemsError;
+
+  const { error: keyError } = await supabase
+    .from("vault_encryption_keys")
+    .delete()
+    .not("user_id", "is", null);
+
+  if (keyError) throw keyError;
+}

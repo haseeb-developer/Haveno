@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
-import { createClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/supabase/current-user";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,9 +26,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Haveno — Secure Authentication",
+  title: "Havenoo — Secure Authentication",
   description:
-    "The secure foundation for Haveno: production-ready authentication built on Supabase.",
+    "The secure foundation for Havenoo: production-ready authentication built on Supabase.",
 };
 
 export default async function RootLayout({
@@ -37,10 +36,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getRequestUser();
 
   return (
     <html
@@ -53,7 +49,6 @@ export default async function RootLayout({
           <AuthProvider initialUser={user}>
             {children}
             <Toaster />
-            <Analytics />
           </AuthProvider>
         </ThemeProvider>
       </body>

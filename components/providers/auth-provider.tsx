@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -30,22 +31,41 @@ export function AuthProvider({
 
   const [user, setUser] = useState<AuthUser | null>(initialUser);
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [isLoading, setIsLoading] = useState(!initialUser);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Tracks the user id the server already rendered with (via initialUser),
+  // so we only ask Server Components to re-render when the auth state
+  // actually changes — not on every mount.
+  const lastKnownUserId = useRef<string | null>(initialUser?.id ?? null);
 
   useEffect(() => {
+    // onAuthStateChange fires once immediately on subscribe with an
+    // INITIAL_SESSION event reporting whatever session already exists
+    // (read locally from cookies — no network call). That's the only
+    // "initial" check needed; there's no reason to also call
+    // getSession() separately right after, since both would just report
+    // the same thing a moment apart.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setIsLoading(false);
-      router.refresh();
-    });
 
-    supabase.auth.getSession().then(({ data: { session: initial } }) => {
-      setSession(initial);
-      setUser(initial?.user ?? null);
-      setIsLoading(false);
+      // Only refresh Server Components when the signed-in identity
+      // actually changed. INITIAL_SESSION just reports the state the
+      // server already rendered with (root layout received the same user
+      // via initialUser) — refreshing here would just re-fetch every
+      // layout for no reason, on every single page load. TOKEN_REFRESHED
+      // rotates the access token without changing who's signed in, so
+      // Server Components don't need new data for that either.
+      const newUserId = newSession?.user?.id ?? null;
+      const identityChanged = newUserId !== lastKnownUserId.current;
+      lastKnownUserId.current = newUserId;
+
+      if (event !== "INITIAL_SESSION" && event !== "TOKEN_REFRESHED" && identityChanged) {
+        router.refresh();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -55,7 +75,6 @@ export function AuthProvider({
   const signOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");
-    router.refresh();
   };
 
   const value = useMemo(

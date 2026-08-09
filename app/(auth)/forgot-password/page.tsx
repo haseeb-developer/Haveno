@@ -6,7 +6,7 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { AUTH_COPY } from "@/constants/copy";
 import { ROUTES } from "@/constants/routes";
 
-export const metadata: Metadata = { title: "Reset password — Haveno" };
+export const metadata: Metadata = { title: "Reset password — Havenoo" };
 
 export default function ForgotPasswordPage() {
   const copy = AUTH_COPY.forgotPassword;

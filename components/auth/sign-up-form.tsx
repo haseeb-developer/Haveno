@@ -131,7 +131,7 @@ export function SignUpForm() {
       </Button>
 
       <p className="text-center text-xs leading-relaxed text-muted-foreground">
-        By continuing you agree to Haveno&apos;s Terms of Service and
+        By continuing you agree to Havenoo&apos;s Terms of Service and
         Privacy Policy.
       </p>
     </form>

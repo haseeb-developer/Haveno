@@ -18,6 +18,7 @@ import {
   insertVaultItemRow,
   updateVaultItemRow,
   deleteVaultItemRow,
+  resetVaultCompletely,
 } from "@/lib/supabase/vault";
 import {
   decryptVaultItem,
@@ -46,6 +47,7 @@ interface VaultContextValue {
   updateItem: (id: string, input: VaultItemInput) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
+  resetVault: () => Promise<void>;
 }
 
 const VaultContext = createContext<VaultContextValue | undefined>(undefined);
@@ -277,6 +279,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [items, requireDek]
   );
 
+  const resetVault = useCallback(async () => {
+    await resetVaultCompletely();
+    dekRef.current = null;
+    setItems([]);
+    setStatus("needs-setup");
+  }, []);
+
   const value = useMemo<VaultContextValue>(
     () => ({
       status,
@@ -291,6 +300,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       updateItem,
       deleteItem,
       toggleFavorite,
+      resetVault,
     }),
     [
       status,
@@ -304,6 +314,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       updateItem,
       deleteItem,
       toggleFavorite,
+      resetVault,
     ]
   );
 

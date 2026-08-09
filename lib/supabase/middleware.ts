@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_ONLY_ROUTES, PUBLIC_ROUTES, ROUTES } from "@/constants/routes";
+import { REQUEST_USER_HEADER } from "@/lib/supabase/current-user";
 import type { Database } from "@/types/database";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
@@ -42,9 +43,24 @@ function buildCsp(nonce: string, isDev: boolean) {
 
 /**
  * Refreshes the Supabase session on every request, enforces route
- * protection at the edge, and attaches a fresh-nonce CSP to every
- * response. This runs before any page renders, so protected pages never
- * flash their content to an unauthenticated visitor.
+ * protection at the edge, attaches a fresh-nonce CSP to every response,
+ * and forwards the already-verified user to downstream Server Components.
+ *
+ * PERFORMANCE NOTE: supabase.auth.getUser() is a real network round-trip
+ * (it verifies the session JWT against Supabase, unlike getSession() which
+ * only decodes it locally). It happens exactly ONCE, here. Server
+ * Components that need the current user should read it via
+ * lib/supabase/current-user.ts's getRequestUser() instead of calling
+ * getUser() again themselves — every extra call is another full
+ * round-trip to Supabase's auth server, stacked sequentially in Next's
+ * layout render order, and was the actual cause of a multi-second delay
+ * on every navigation before this was fixed.
+ *
+ * This is safe: the header below is fully controlled by this middleware.
+ * `requestHeaders` starts as a copy of the incoming request's headers, but
+ * is unconditionally overwritten (set or deleted) below based on the
+ * verified result — a client can never make its own copy of this header
+ * survive through to a Server Component.
  */
 export async function updateSession(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -53,11 +69,9 @@ export async function updateSession(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.delete(REQUEST_USER_HEADER);
 
-  let supabaseResponse = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
-  supabaseResponse.headers.set("Content-Security-Policy", csp);
+  const cookiesToApply: CookieToSet[] = [];
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,17 +81,11 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: CookieToSet[]) {
-          cookiesToSet.forEach(({ name, value }) =>
+        setAll(newCookies: CookieToSet[]) {
+          newCookies.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({
-            request: { headers: requestHeaders },
-          });
-          supabaseResponse.headers.set("Content-Security-Policy", csp);
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+          cookiesToApply.push(...newCookies);
         },
       },
     }
@@ -89,6 +97,13 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (user) {
+    requestHeaders.set(
+      REQUEST_USER_HEADER,
+      Buffer.from(JSON.stringify(user)).toString("base64")
+    );
+  }
 
   const pathname = request.nextUrl.pathname;
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
@@ -116,9 +131,13 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  // IMPORTANT: You must return the supabaseResponse object as is. If you
-  // create a new response object, make sure to copy the cookies over, or
-  // the browser and server will get out of sync and the session will end
-  // prematurely.
-  return supabaseResponse;
+  // Built once, after the nonce and the verified user are both known, so
+  // downstream Server Components see both via next/headers' headers().
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
+  cookiesToApply.forEach(({ name, value, options }) =>
+    response.cookies.set(name, value, options)
+  );
+
+  return response;
 }

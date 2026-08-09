@@ -5,7 +5,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { AUTH_COPY } from "@/constants/copy";
 import { ROUTES } from "@/constants/routes";
 
-export const metadata: Metadata = { title: "Verify your email — Haveno" };
+export const metadata: Metadata = { title: "Verify your email — Havenoo" };
 
 export default function VerifyEmailPage() {
   const copy = AUTH_COPY.verifyEmail;

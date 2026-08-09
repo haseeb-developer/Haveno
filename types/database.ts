@@ -41,6 +41,15 @@ export type VaultItemDbRow = {
   updated_at: string;
 };
 
+export type ProfileDbRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  terms_acknowledged_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -64,6 +73,15 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<VaultItemDbRow>;
+        Relationships: [];
+      };
+      profiles: {
+        Row: ProfileDbRow;
+        Insert: Omit<ProfileDbRow, "created_at" | "updated_at"> & {
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<ProfileDbRow>;
         Relationships: [];
       };
     };

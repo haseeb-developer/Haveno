@@ -4,3 +4,4 @@ export * from "./kdf";
 export * from "./aes";
 export * from "./vault-crypto";
 export * from "./passphrase-strength";
+export * from "./passphrase-generator";

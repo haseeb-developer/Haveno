@@ -55,7 +55,6 @@ export function LoginForm() {
     toast.success("Welcome back");
     const redirectTo = searchParams.get("redirectTo") || ROUTES.dashboard;
     router.push(redirectTo);
-    router.refresh();
   };
 
   return (
